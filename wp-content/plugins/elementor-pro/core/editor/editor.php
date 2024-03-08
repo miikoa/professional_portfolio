@@ -7,6 +7,7 @@ use Elementor\Core\Utils\Assets_Translation_Loader;
 use ElementorPro\License\Admin as License_Admin;
 use ElementorPro\License\API as License_API;
 use ElementorPro\Plugin;
+use ElementorPro\Modules\DisplayConditions\Module as Display_Conditions_Module;
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit; // Exit if accessed directly
@@ -126,7 +127,7 @@ class Editor extends App {
 		foreach ( $assets_config->all() as $package => $config ) {
 			wp_enqueue_script(
 				$config['handle'],
-				$this->get_js_assets_url( "packages/${package}/${package}" ),
+				$this->get_js_assets_url( "packages/{$package}/{$package}" ),
 				$config['deps'],
 				ELEMENTOR_PRO_VERSION,
 				true
@@ -156,6 +157,16 @@ class Editor extends App {
 			'utm_campaign' => 'connect-and-activate-license',
 			'utm_content' => 'editor-dynamic-promotion',
 		] );
+
+		if ( ! isset( $settings['promotionWidgets'] ) ) {
+			$settings['promotionWidgets'] = License_API::get_promotion_widgets();
+		}
+
+		if ( Display_Conditions_Module::can_use_display_conditions() && Display_Conditions_Module::is_experiment_active() ) {
+			$settings['displayConditions'] = Display_Conditions_Module::instance()
+				->get_conditions_manager()
+				->get_conditions_config();
+		}
 
 		return $settings;
 	}
